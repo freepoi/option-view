@@ -1,11 +1,9 @@
 import { createTheme } from "@mui/material/styles";
 
-export const lightTheme = createTheme({
+export const theme = createTheme({
   palette: {
-    mode: "light",
     primary: {
       main: "#4361ee",
-      contrastText: "#ffffff",
     },
     secondary: {
       main: "#3f37c9",
@@ -32,19 +30,7 @@ export const lightTheme = createTheme({
     },
   },
   typography: {
-    fontFamily: [
-      "Inter",
-      "-apple-system",
-      "BlinkMacSystemFont",
-      '"Segoe UI"',
-      "Roboto",
-      '"Helvetica Neue"',
-      "Arial",
-      "sans-serif",
-      '"Apple Color Emoji"',
-      '"Segoe UI Emoji"',
-      '"Segoe UI Symbol"',
-    ].join(","),
+    fontFamily: '"Inter", "Helvetica", "Arial", sans-serif',
   },
   components: {
     MuiButton: {
@@ -64,14 +50,12 @@ export const lightTheme = createTheme({
         },
       },
     },
-    MuiTableCell: {
+    MuiChip: {
       styleOverrides: {
         root: {
-          borderBottom: "1px solid rgba(0, 0, 0, 0.08)",
+          fontWeight: 500,
         },
       },
     },
   },
 });
-
-export type AppTheme = typeof lightTheme;

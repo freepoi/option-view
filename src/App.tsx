@@ -1,68 +1,65 @@
 import React, { useState } from "react";
-import { OptionForm } from "./components/OptionForm";
-import ProfitChart from "./components/ProfitChart";
-import { StrategySummary } from "./components/StrategySummary";
-import { ThemeProvider, CssBaseline } from "@mui/material";
+import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import Container from "@mui/material/Container";
-import Paper from "@mui/material/Paper";
 import Typography from "@mui/material/Typography";
-import AppBar from "@mui/material/AppBar";
-import Toolbar from "@mui/material/Toolbar";
-import { lightTheme } from "./theme";
+import ProfitChart from "./components/ProfitChart";
+import { theme } from "./theme";
 import { Option } from "./types";
 
-function App() {
-  const [options, setOptions] = useState<Option[]>([]);
+const initialOptions: Option[] = [
+  {
+    type: "call",
+    position: "long",
+    strike: 85000,
+    premium: 2000,
+    quantity: 1,
+  },
+  {
+    type: "call",
+    position: "short",
+    strike: 87000,
+    premium: 1130,
+    quantity: 1,
+  },
+];
 
-  const addOption = (option: Option) => {
-    setOptions([...options, option]);
-  };
-
-  const removeOption = (index: number) => {
-    const newOptions = [...options];
-    newOptions.splice(index, 1);
-    setOptions(newOptions);
-  };
-
-  const updateOption = (index: number, updatedOption: Option) => {
-    const newOptions = [...options];
-    newOptions[index] = updatedOption;
-    setOptions(newOptions);
-  };
+const App: React.FC = () => {
+  const [options, setOptions] = useState<Option[]>(initialOptions);
 
   return (
-    <ThemeProvider theme={lightTheme}>
+    <ThemeProvider theme={theme}>
       <CssBaseline />
-      <AppBar position="static">
-        <Toolbar>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            加密货币期权组合分析工具
+      <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          sx={{
+            mb: 3,
+            fontWeight: 600,
+            color: theme.palette.primary.main,
+          }}
+        >
+          加密货币期权组合分析工具
+        </Typography>
+
+        <ProfitChart options={options} setOptions={setOptions} />
+
+        <Box
+          sx={{
+            mt: 4,
+            pt: 3,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            textAlign: "center",
+          }}
+        >
+          <Typography variant="body2" color="text.secondary">
+            提示：添加期权后，点击编辑图标修改参数，使用复选框控制曲线显示
           </Typography>
-        </Toolbar>
-      </AppBar>
-      <Container maxWidth="lg" sx={{ my: 4 }}>
-        <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-          <OptionForm addOption={addOption} />
-        </Paper>
-
-        {options.length > 0 && (
-          <>
-            <Paper elevation={3} sx={{ p: 3, mb: 3 }}>
-              <ProfitChart options={options} />
-            </Paper>
-
-            <Paper elevation={3} sx={{ p: 3 }}>
-              <StrategySummary
-                options={options}
-                removeOption={removeOption}
-                updateOption={updateOption}
-              />
-            </Paper>
-          </>
-        )}
+        </Box>
       </Container>
     </ThemeProvider>
   );
-}
+};
 
 export default App;

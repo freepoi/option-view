@@ -1,12 +1,14 @@
 export interface Option {
   type: "call" | "put";
+  position: "long" | "short";
   strike: number;
   premium: number;
-  position: "long" | "short";
   quantity: number;
+  editing?: boolean;
 }
 
-export interface ChartDataPoint {
-  price: number;
-  profit: number;
+export interface RiskReward {
+  maxGain: number;
+  maxLoss: number;
+  breakEven: number;
 }
