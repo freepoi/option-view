@@ -181,12 +181,14 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
         verticalGuide.attr("opacity", 0); // 隐藏辅助线
       });
   }, [
+    containerRef,
+    dimensions,
     options,
+    priceDomain,
     showCombination,
     visibleOptions,
-    priceDomain,
-    dimensions,
-    theme,
+    theme.palette.text.secondary,
+    theme.palette.primary.main,
     setHoverPrice,
   ]);
 
@@ -211,7 +213,9 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
         <ProfitChartHover
           hoverPrice={hoverPrice}
           options={options}
-          visibleOptions={visibleOptions}
+          visibleOptions={visibleOptions.filter((id) =>
+            options.some((o) => o.id === id)
+          )}
           showCombination={showCombination}
           priceDomain={priceDomain}
         />

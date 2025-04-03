@@ -7,6 +7,7 @@ export interface Option {
   editing?: boolean;
   id: string;
   color: string;
+  disabled: boolean;
 }
 
 export interface RiskReward {

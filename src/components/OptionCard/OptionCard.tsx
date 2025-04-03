@@ -7,7 +7,11 @@ import {
   Stack,
   TextField,
 } from "@mui/material";
-import { Delete as DeleteIcon } from "@mui/icons-material";
+import {
+  Delete as DeleteIcon,
+  ToggleOn as ToggleOnIcon,
+  ToggleOff as ToggleOffIcon,
+} from "@mui/icons-material";
 import { Option } from "../../types";
 import OptionRiskAnalysis from "./OptionRiskAnalysis";
 import { ToggleButtonGroup, ToggleButton } from "@mui/material";
@@ -72,6 +76,16 @@ const OptionCard: React.FC<OptionCardProps> = ({
               <EditIcon fontSize="small" />
             )}
           </IconButton> */}
+          <IconButton
+            size="small"
+            onClick={() => updateOption(index, "disabled", !option.disabled)}
+          >
+            {option.disabled ? (
+              <ToggleOffIcon color="disabled" />
+            ) : (
+              <ToggleOnIcon />
+            )}
+          </IconButton>
           <IconButton
             color="primary"
             size="small"

@@ -52,36 +52,42 @@ const App: React.FC = () => {
       editing: true,
       id: Date.now().toString(), // 使用时间戳作为唯一ID
       color: generateColor(),
+      disabled: false,
     };
-  }, [options]);
+  }, []);
 
   // 添加新期权（置顶）
   const addOption = () => {
     const newOption: Option = getDefaultOption();
     setOptions((prev) => [newOption, ...prev]);
+    setIsOptionsCollapsed(false);
   };
 
   // 折叠/展开期权列表
   const toggleOptionsCollapse = () => {
-    setIsOptionsCollapsed(!isOptionsCollapsed);
+    setIsOptionsCollapsed((isOptionsCollapsed) => !isOptionsCollapsed);
   };
 
+  const filteredOptions = useMemo(
+    () => options.filter((option) => !option.disabled),
+    [options]
+  );
   // 计算风险收益指标
   const portfolioRiskReward = useMemo(
-    () => calculatePortfolioRiskReward(options),
-    [options]
+    () => calculatePortfolioRiskReward(filteredOptions),
+    [filteredOptions]
   );
 
   // 价格范围计算（自动调整）
   const priceDomain = useMemo(() => {
-    const validOptions = options.filter((o) => o.strike > 0);
+    const validOptions = filteredOptions.filter((o) => o.strike > 0);
     if (validOptions.length === 0) return [0, 100000] as [number, number];
 
     const strikes = validOptions.map((o) => o.strike);
     const min = Math.min(...strikes);
     const max = Math.max(...strikes);
     return [min * 0.7, max * 1.3] as [number, number];
-  }, [options]);
+  }, [filteredOptions]);
 
   // 期权操作函数
   const toggleEditOption = (index: number) => {
@@ -206,7 +212,7 @@ const App: React.FC = () => {
         />
 
         <ProfitChart
-          options={options}
+          options={filteredOptions}
           priceDomain={priceDomain}
           showCombination={showCombination}
           visibleOptions={visibleOptions}
