@@ -11,7 +11,6 @@ interface ProfitChartTooltipProps {
   visibleOptions: number[];
   showCombination: boolean;
   priceDomain: [number, number];
-  getColor: (index: number) => string;
 }
 
 const ProfitChartTooltip: React.FC<ProfitChartTooltipProps> = ({
@@ -20,7 +19,6 @@ const ProfitChartTooltip: React.FC<ProfitChartTooltipProps> = ({
   visibleOptions,
   showCombination,
   priceDomain,
-  getColor,
 }) => {
   const theme = useTheme();
 
@@ -73,7 +71,7 @@ const ProfitChartTooltip: React.FC<ProfitChartTooltipProps> = ({
             key={index}
             variant="body2"
             sx={{
-              color: getColor(index),
+              color: option.color,
               mt: 1,
               display: "flex",
               alignItems: "center",
@@ -85,7 +83,7 @@ const ProfitChartTooltip: React.FC<ProfitChartTooltipProps> = ({
                 width: 10,
                 height: 10,
                 borderRadius: "50%",
-                bgcolor: getColor(index),
+                bgcolor: option.color,
                 mr: 1.5,
               }}
             />

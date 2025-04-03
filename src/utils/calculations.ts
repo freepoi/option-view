@@ -11,37 +11,41 @@ export const calculateOptionProfit = (
   price: number,
   option: Option
 ): number => {
-  const { type, position, strike, premium, quantity } = option;
+  // 修复3：处理无效值
+  if (!option || option.strike <= 0 || option.premium < 0) return 0;
 
-  if (type === "call") {
-    const intrinsic = Math.max(0, price - strike);
-    return position === "long"
-      ? (intrinsic - premium) * quantity
-      : (premium - intrinsic) * quantity;
-  } else {
-    const intrinsic = Math.max(0, strike - price);
-    return position === "long"
-      ? (intrinsic - premium) * quantity
-      : (premium - intrinsic) * quantity;
-  }
+  const { type, position, strike, premium, quantity } = option;
+  const intrinsic =
+    type === "call" ? Math.max(0, price - strike) : Math.max(0, strike - price);
+
+  return position === "long"
+    ? (intrinsic - premium) * quantity
+    : (premium - intrinsic) * quantity;
 };
 
-export const generatePricePoints = (
-  domain: [number, number],
-  strikes: number[]
-): number[] => {
-  const points = new Set<number>();
+export const generatePricePoints = (options: Option[]): number[] => {
+  // 过滤无效期权
+  const validOptions = options.filter((o) => o.strike > 0 && o.premium >= 0);
 
-  // 保证行权价±5%范围内有足够点
-  strikes.forEach((strike) => {
-    for (let ratio = 0.95; ratio <= 1.05; ratio += 0.01) {
-      points.add(strike * ratio);
-    }
-  });
+  if (validOptions.length === 0) return [0, 100000];
 
-  // 添加域边界
-  points.add(domain[0]);
-  points.add(domain[1]);
+  // 获取有效行权价
+  const strikes = validOptions.map((o) => o.strike);
+  const minStrike = Math.min(...strikes);
+  const maxStrike = Math.max(...strikes);
+
+  // 生成关键点（包含边界和行权价附近）
+  const points = new Set<number>([
+    0,
+    ...strikes.flatMap((strike) => [
+      strike * 0.9,
+      strike * 0.95,
+      strike,
+      strike * 1.05,
+      strike * 1.1,
+    ]),
+    maxStrike * 1.5,
+  ]);
 
   return Array.from(points).sort((a, b) => a - b);
 };
@@ -92,23 +96,19 @@ export const calculatePortfolioRiskReward = (
     return { maxGain: 0, maxLoss: 0, breakEven: 0, breakEvens: [] };
   }
 
-  // 1. 计算所有可能的关键价格点（行权价±1%）
-  const criticalPrices = options.flatMap((o) => [
-    o.strike * 0.99,
-    o.strike,
-    o.strike * 1.01,
+  // 1. 生成关键测试价格点（包含所有行权价、盈亏平衡点和边界值）
+  const strikes = options.map((o) => o.strike);
+  const testPrices = new Set<number>([
+    0, // 标的价为零的情况
+    ...strikes,
+    ...strikes.map((s) => s * 1.5), // 高价测试点
+    ...options.map((o) =>
+      o.type === "call" ? o.strike + o.premium : o.strike - o.premium
+    ), // 单腿盈亏平衡点
   ]);
-  const pricePoints = Array.from(
-    new Set([
-      ...criticalPrices,
-      ...options.flatMap((o) => [o.strike + o.premium, o.strike - o.premium]),
-      0, // 确保包含0价格
-      Math.max(...options.map((o) => o.strike)) * 2, // 足够高的价格
-    ])
-  ).sort((a, b) => a - b);
 
   // 2. 计算每个关键点的组合盈亏
-  const profits = pricePoints.map((price) => ({
+  const testResults = Array.from(testPrices).map((price) => ({
     price,
     value: options.reduce(
       (sum, opt) => sum + calculateOptionProfit(price, opt),
@@ -116,36 +116,61 @@ export const calculatePortfolioRiskReward = (
     ),
   }));
 
-  // 3. 自动识别上下限
-  const values = profits.map((p) => p.value);
-  const maxGain = Math.max(...values);
-  const maxLoss = Math.min(...values);
-
-  // 4. 计算盈亏平衡点（利润为零的点）
+  // 3. 精确查找盈亏平衡点（利润为零的交叉点）
   const breakEvens: number[] = [];
-  for (let i = 0; i < profits.length - 1; i++) {
-    const p1 = profits[i];
-    const p2 = profits[i + 1];
-    if (p1.value * p2.value <= 0) {
-      // 符号变化
-      const breakeven = linearInterpolation(p1, p2);
-      breakEvens.push(breakeven);
+  testResults.sort((a, b) => a.price - b.price); // 按价格排序
+
+  for (let i = 0; i < testResults.length - 1; i++) {
+    const a = testResults[i];
+    const b = testResults[i + 1];
+
+    if (a.value * b.value <= 0) {
+      // 存在零点
+      const breakeven = linearInterpolate(a, b);
+      if (!breakEvens.some((x) => Math.abs(x - breakeven) < 0.01)) {
+        breakEvens.push(Number(breakeven.toFixed(2)));
+      }
     }
   }
 
+  // 4. 计算最大收益/亏损
+  const allValues = testResults.map((r) => r.value);
+  const maxGain = Math.max(...allValues);
+  const maxLoss = Math.min(...allValues);
+
+  // 5. 特殊处理无限收益的情况
+  const hasUnlimitedGain = options.some(
+    (o) =>
+      o.position === "long" &&
+      o.type === "call" &&
+      !options.some(
+        (oo) =>
+          oo.type === "call" && oo.position === "short" && oo.strike > o.strike
+      )
+  );
+
+  const hasUnlimitedLoss = options.some(
+    (o) =>
+      o.position === "short" &&
+      o.type === "call" &&
+      !options.some(
+        (oo) =>
+          oo.type === "call" && oo.position === "long" && oo.strike < o.strike
+      )
+  );
+
   return {
-    maxGain,
-    maxLoss,
-    breakEven: breakEvens[0] || 0, // 主要平衡点
-    breakEvens: breakEvens.filter(Boolean).sort((a, b) => a - b),
+    maxGain: hasUnlimitedGain ? Infinity : maxGain,
+    maxLoss: hasUnlimitedLoss ? -Infinity : maxLoss,
+    breakEven: breakEvens[0] || 0,
+    breakEvens: [...new Set(breakEvens)].sort((a, b) => a - b),
   };
 };
 
 // 线性插值辅助函数
-const linearInterpolation = (
-  p1: { price: number; value: number },
-  p2: { price: number; value: number }
+const linearInterpolate = (
+  a: { price: number; value: number },
+  b: { price: number; value: number }
 ): number => {
-  if (p1.value === p2.value) return p1.price;
-  return p1.price - (p1.value * (p2.price - p1.price)) / (p2.value - p1.value);
+  return a.price - (a.value * (b.price - a.price)) / (b.value - a.value);
 };

@@ -5,6 +5,8 @@ export interface Option {
   premium: number;
   quantity: number;
   editing?: boolean;
+  id: string;
+  color: string;
 }
 
 export interface RiskReward {
@@ -12,3 +14,5 @@ export interface RiskReward {
   maxLoss: number;
   breakEven: number;
 }
+
+export type VisibleOptions = string[];

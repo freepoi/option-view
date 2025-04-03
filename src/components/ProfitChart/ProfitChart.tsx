@@ -2,7 +2,7 @@ import React, { useRef, useCallback, useEffect } from "react";
 import * as d3 from "d3";
 import { Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Option } from "../../types";
+import { Option, VisibleOptions } from "../../types";
 import {
   calculateOptionProfit,
   generatePricePoints,
@@ -14,10 +14,9 @@ interface ProfitChartProps {
   options: Option[];
   priceDomain: [number, number];
   showCombination: boolean;
-  visibleOptions: number[];
+  visibleOptions: VisibleOptions;
   hoverPrice: number | null;
   setHoverPrice: (price: number | null) => void;
-  getColor: (index: number) => string;
   containerRef: React.RefObject<HTMLDivElement>;
 }
 
@@ -28,7 +27,6 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
   visibleOptions,
   hoverPrice,
   setHoverPrice,
-  getColor,
   containerRef,
 }) => {
   const theme = useTheme();
@@ -39,14 +37,15 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
     if (!svgRef.current || !containerRef.current) return;
 
     const { width, height } = dimensions;
-    const margin = { top: 20, right: 20, bottom: 40, left: 60 };
+    const margin = { top: 20, right: 20, bottom: 40, left: 10 };
 
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    // 生成关键价格点
-    const strikes = options.map((o) => o.strike);
-    const pricePoints = generatePricePoints(priceDomain, strikes);
+    // 过滤无效期权
+    const validOptions = options.filter((o) => o.strike > 0 && o.premium >= 0);
+    // 使用过滤后的期权生成价格点
+    const pricePoints = generatePricePoints(validOptions);
 
     const xScale = d3
       .scaleLinear()
@@ -66,7 +65,9 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
       );
     }
 
-    visibleOptions.forEach((index) => {
+    visibleOptions.forEach((id) => {
+      const index = options.findIndex((o) => o.id === id);
+      if (index === -1) return;
       yValues = yValues.concat(
         pricePoints.map((price) => calculateOptionProfit(price, options[index]))
       );
@@ -83,11 +84,6 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
       .append("g")
       .attr("transform", `translate(0,${height - margin.bottom})`)
       .call(d3.axisBottom(xScale));
-
-    svg
-      .append("g")
-      .attr("transform", `translate(${margin.left},0)`)
-      .call(d3.axisLeft(yScale));
 
     // 绘制零线
     svg
@@ -121,8 +117,9 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
     }
 
     // 绘制单个期权线（严格折线）
-    visibleOptions.forEach((optionIndex, idx) => {
-      const option = options[optionIndex];
+    visibleOptions.forEach((optionId, idx) => {
+      const option = options.find((o) => o.id === optionId);
+      if (!option) return;
       const line = d3
         .line<number>()
         .x((d) => xScale(d))
@@ -134,9 +131,18 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
         .datum(pricePoints)
         .attr("d", line)
         .attr("fill", "none")
-        .attr("stroke", getColor(idx))
+        .attr("stroke", option.color)
         .attr("stroke-width", 1.5);
     });
+
+    // 添加垂直辅助线（在鼠标交互区域代码之后添加）
+    const verticalGuide = svg
+      .append("line")
+      .attr("class", "vertical-guide")
+      .attr("stroke", theme.palette.text.secondary)
+      .attr("stroke-width", 1)
+      .attr("stroke-dasharray", "3 3")
+      .attr("opacity", 0);
 
     // 鼠标交互区域
     svg
@@ -152,6 +158,27 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
         setHoverPrice(xScale.invert(x));
       })
       .on("mouseleave", () => setHoverPrice(null));
+
+    // 更新鼠标交互逻辑
+    svg
+      .select(".tracker")
+      .on("mousemove", (event) => {
+        const [x] = d3.pointer(event);
+        const price = xScale.invert(x);
+        setHoverPrice(price);
+
+        // 更新垂直辅助线位置
+        verticalGuide
+          .attr("x1", x)
+          .attr("x2", x)
+          .attr("y1", margin.top)
+          .attr("y2", height - margin.bottom)
+          .attr("opacity", 1);
+      })
+      .on("mouseleave", () => {
+        setHoverPrice(null);
+        verticalGuide.attr("opacity", 0); // 隐藏辅助线
+      });
   }, [
     options,
     showCombination,
@@ -159,7 +186,6 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
     priceDomain,
     dimensions,
     theme,
-    getColor,
     setHoverPrice,
   ]);
 
@@ -182,7 +208,6 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
           visibleOptions={visibleOptions}
           showCombination={showCombination}
           priceDomain={priceDomain}
-          getColor={getColor}
         />
       )}
     </Box>

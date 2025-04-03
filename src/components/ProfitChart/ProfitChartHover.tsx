@@ -1,17 +1,16 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
-import { Option } from "../../types";
+import { Option, VisibleOptions } from "../../types";
 import { calculateOptionProfit } from "../../utils/calculations";
 import { formatCurrency, formatNumber } from "../../utils/formatters";
 
 interface ProfitChartHoverProps {
   hoverPrice: number | null;
   options: Option[];
-  visibleOptions: number[];
+  visibleOptions: VisibleOptions;
   showCombination: boolean;
   priceDomain: [number, number];
-  getColor: (index: number) => string;
 }
 
 const ProfitChartHover: React.FC<ProfitChartHoverProps> = ({
@@ -20,7 +19,6 @@ const ProfitChartHover: React.FC<ProfitChartHoverProps> = ({
   visibleOptions,
   showCombination,
   priceDomain,
-  getColor,
 }) => {
   const theme = useTheme();
 
@@ -68,14 +66,14 @@ const ProfitChartHover: React.FC<ProfitChartHoverProps> = ({
         </Typography>
       )}
 
-      {visibleOptions.map((index) => {
-        const option = options[index];
+      {visibleOptions.map((id) => {
+        const optionIndex = options.findIndex((option) => option.id === id);
         return (
           <Typography
-            key={index}
+            key={id}
             variant="body2"
             sx={{
-              color: getColor(index),
+              color: options[optionIndex].color,
               mt: 1,
               display: "flex",
               alignItems: "center",
@@ -87,13 +85,15 @@ const ProfitChartHover: React.FC<ProfitChartHoverProps> = ({
                 width: 10,
                 height: 10,
                 borderRadius: "50%",
-                bgcolor: getColor(index),
+                bgcolor: options[optionIndex].color,
                 mr: 1.5,
               }}
             />
-            {`${option.position === "long" ? "买入" : "卖出"} ${
-              option.quantity
-            }手: ${formatNumber(calculateOptionProfit(hoverPrice, option))}`}
+            {`${options[optionIndex].position === "long" ? "买入" : "卖出"} ${
+              options[optionIndex].quantity
+            }手: ${formatNumber(
+              calculateOptionProfit(hoverPrice, options[optionIndex])
+            )}`}
           </Typography>
         );
       })}
