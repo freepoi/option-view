@@ -21,32 +21,29 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    # 必须先安装Node.js环境
+    # 第一步：安装pnpm必须在Node.js之前
+    - name: Install pnpm
+      uses: pnpm/action-setup@v2
+      with:
+        version: 8.15.3
+        run_install: true  # 必须开启自动安装
+
+    # 第二步：安装Node.js环境
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: "22.13.0"
-        cache: 'pnpm'  # 启用pnpm缓存
+        cache: 'pnpm'
 
-    # 必须显式安装pnpm
-    - name: Install pnpm
-      id: pnpm
-      uses: pnpm/action-setup@v2
-      with:
-        version: 8.15.3  # 必须与本地版本严格一致
-        run_install: false
-
-    # 需要将pnpm添加到PATH
-    - name: Get pnpm store path
+    # 第三步：显式设置PATH
+    - name: Add pnpm to PATH
       shell: bash
       run: |
-        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
+        echo "$(pnpm bin):$PATH" >> $GITHUB_PATH
 
-    # 安装依赖
+    # 第四步：安装依赖
     - name: Install dependencies
       run: pnpm install --frozen-lockfile
-      env:
-        PNPM_HOME: /home/runner/.pnpm-store  # 重要：设置pnpm路径
 
     - name: Build project
       run: pnpm build
