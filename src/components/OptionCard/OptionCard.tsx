@@ -94,17 +94,16 @@ const OptionCard: React.FC<OptionCardProps> = ({
       >
         {/* 期权类型选择 */}
         <ToggleButtonGroup
+          color="primary"
           size="small"
           exclusive
           value={option.position}
-          // disabled={disabled}
           onChange={(_, newPos) =>
             newPos && updateOption(index, "position", newPos)
           }
           disabled={!option.editing}
         >
           <ToggleButton
-            color="primary"
             value="long"
             sx={{
               textTransform: "none",
