@@ -125,7 +125,7 @@ const App: React.FC = () => {
             color: theme.palette.primary.main,
           }}
         >
-          加密货币期权组合分析工具
+          期权组合分析工具
         </Typography>
 
         {/* 控制按钮区 */}
