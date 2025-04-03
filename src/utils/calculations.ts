@@ -31,7 +31,6 @@ export const generatePricePoints = (options: Option[]): number[] => {
 
   // 获取有效行权价
   const strikes = validOptions.map((o) => o.strike);
-  const minStrike = Math.min(...strikes);
   const maxStrike = Math.max(...strikes);
 
   // 生成关键点（包含边界和行权价附近）

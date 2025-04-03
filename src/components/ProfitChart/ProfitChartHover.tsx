@@ -73,7 +73,6 @@ const ProfitChartHover: React.FC<ProfitChartHoverProps> = ({
             key={id}
             variant="body2"
             sx={{
-              color: options[optionIndex].color,
               mt: 1,
               display: "flex",
               alignItems: "center",
@@ -86,14 +85,25 @@ const ProfitChartHover: React.FC<ProfitChartHoverProps> = ({
                 height: 10,
                 borderRadius: "50%",
                 bgcolor: options[optionIndex].color,
-                mr: 1.5,
+                mr: 1,
               }}
             />
-            {`${options[optionIndex].position === "long" ? "买入" : "卖出"} ${
-              options[optionIndex].quantity
-            }手: ${formatNumber(
-              calculateOptionProfit(hoverPrice, options[optionIndex])
-            )}`}
+            {`${options[optionIndex].type === "call" ? "看涨" : "看跌"}$${
+              options[optionIndex].strike
+            }:`}
+            <Typography
+              component="span"
+              color={
+                calculateOptionProfit(hoverPrice, options[optionIndex]) > 0
+                  ? "success.main"
+                  : "error.main"
+              }
+            >
+              &nbsp;
+              {formatNumber(
+                calculateOptionProfit(hoverPrice, options[optionIndex])
+              )}
+            </Typography>
           </Typography>
         );
       })}

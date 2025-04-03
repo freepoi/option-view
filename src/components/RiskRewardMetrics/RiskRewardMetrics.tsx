@@ -13,7 +13,7 @@ const RiskRewardMetrics: React.FC<RiskRewardMetricsProps> = ({
   isSpread = false,
 }) => {
   // 修正无限值的显示逻辑
-  const displayValue = (value: number, isGain: boolean) => {
+  const displayValue = (value: number) => {
     if (isSpread) {
       return formatNumber(value); // 价差策略总是显示具体值
     }
@@ -25,19 +25,19 @@ const RiskRewardMetrics: React.FC<RiskRewardMetricsProps> = ({
   };
 
   return (
-    <Paper elevation={2} sx={{ p: 3, mb: 3 }}>
+    <Paper elevation={2} sx={{ mt: 5, p: 3, mb: 3 }}>
       <Typography variant="h6" sx={{ mb: 2 }}>
         风险收益指标
       </Typography>
 
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
         <Chip
-          label={`最大收益: ${displayValue(riskReward.maxGain, true)}`}
+          label={`最大收益: ${displayValue(riskReward.maxGain)}`}
           color="success"
           variant="outlined"
         />
         <Chip
-          label={`最大亏损: ${displayValue(riskReward.maxLoss, false)}`}
+          label={`最大亏损: ${displayValue(riskReward.maxLoss)}`}
           color="error"
           variant="outlined"
         />

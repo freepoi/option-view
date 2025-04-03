@@ -7,6 +7,7 @@ import {
   Box,
   Button,
   Collapse,
+  Grid,
 } from "@mui/material";
 import {
   Add as AddIcon,
@@ -31,21 +32,22 @@ const App: React.FC = () => {
   const [hoverPrice, setHoverPrice] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [showOptionsPanel, setShowOptionsPanel] = useState(false);
-  const [allOptionsSelected, setAllOptionsSelected] = useState(false);
 
-  const toggleAllOptions = useCallback(() => {
-    setAllOptionsSelected((prev) => !prev);
-  }, []);
+  const toggleAllOptions = () => {
+    if (visibleOptions.length === options.length) {
+      setVisibleOptions([]);
+    } else {
+      setVisibleOptions(options.map((option) => option.id));
+    }
+  };
 
   // 生成合理的默认期权参数
   const getDefaultOption = useCallback((): Option => {
-    const lastStrike =
-      options.length > 0 ? Math.max(...options.map((o) => o.strike)) : 50000;
     return {
       type: "call",
       position: "long",
-      strike: Math.round(lastStrike * 1.1),
-      premium: Math.round(lastStrike * 0.02 * 100) / 100, // 2% of strike
+      strike: 0,
+      premium: 0,
       quantity: 1,
       editing: true,
       id: Date.now().toString(), // 使用时间戳作为唯一ID
@@ -97,11 +99,7 @@ const App: React.FC = () => {
   };
 
   const deleteOption = (id: string) => {
-    setOptions((prev) => {
-      const a = prev.filter((option) => option.id !== id);
-      console.log("删除期权", a);
-      return a;
-    });
+    setOptions((prev) => prev.filter((option) => option.id !== id));
     setVisibleOptions((prev) => prev.filter((optionId) => optionId !== id)); // 统一使用string类型比较
   };
 
@@ -113,10 +111,6 @@ const App: React.FC = () => {
     );
   };
 
-  console.log(
-    "当前期权列表",
-    options.map((option) => option.id)
-  );
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
@@ -174,29 +168,40 @@ const App: React.FC = () => {
 
         {/* 期权卡片列表 */}
         <Collapse in={!isOptionsCollapsed}>
-          {options.map((option, index) => (
-            <OptionCard
-              key={option.id}
-              option={option}
-              index={index}
-              visible={visibleOptions.includes(option.id)}
-              toggleEditOption={toggleEditOption}
-              updateOption={updateOption}
-              deleteOption={deleteOption}
-              toggleOptionVisibility={toggleOptionVisibility}
-            />
-          ))}
-        </Collapse>
+          <Grid container spacing={{ xs: 2, md: 3 }}>
+            {options.map((option, index) => (
+              <Grid item key={option.id} xs={12} md={6}>
+                <OptionCard
+                  key={option.id}
+                  index={index}
+                  option={option}
+                  visible={visibleOptions.includes(option.id)}
+                  toggleEditOption={toggleEditOption}
+                  updateOption={updateOption}
+                  deleteOption={deleteOption}
+                  toggleOptionVisibility={toggleOptionVisibility}
+                />
+              </Grid>
+            ))}
+          </Grid>
 
-        {/* 风险指标和图表 */}
-        <RiskRewardMetrics riskReward={portfolioRiskReward} />
+          <Box
+            sx={{
+              textAlign: "center",
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              提示：新添加的期权会自动出现在列表顶部
+            </Typography>
+          </Box>
+        </Collapse>
 
         <ChartControls
           showOptionsPanel={showOptionsPanel}
           setShowOptionsPanel={setShowOptionsPanel}
           showCombination={showCombination}
           setShowCombination={setShowCombination}
-          allOptionsSelected={allOptionsSelected}
+          allOptionsSelected={visibleOptions.length === options.length}
           toggleAllOptions={toggleAllOptions}
         />
 
@@ -210,18 +215,8 @@ const App: React.FC = () => {
           containerRef={containerRef}
         />
 
-        <Box
-          sx={{
-            mt: 4,
-            pt: 3,
-            borderTop: `1px solid ${theme.palette.divider}`,
-            textAlign: "center",
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            提示：新添加的期权会自动出现在列表顶部
-          </Typography>
-        </Box>
+        {/* 风险指标和图表 */}
+        <RiskRewardMetrics riskReward={portfolioRiskReward} />
       </Container>
     </ThemeProvider>
   );

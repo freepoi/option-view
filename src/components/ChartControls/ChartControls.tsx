@@ -56,7 +56,7 @@ const ChartControls: React.FC<ChartControlsProps> = ({
                 color="primary"
               />
             }
-            label="显示组合盈亏曲线"
+            label="盈亏曲线"
             sx={{ mb: 1 }}
           />
 
@@ -66,11 +66,10 @@ const ChartControls: React.FC<ChartControlsProps> = ({
                 <Checkbox
                   checked={allOptionsSelected}
                   onChange={toggleAllOptions}
-                  indeterminate={!allOptionsSelected}
                   color="primary"
                 />
               }
-              label="全选/全不选单个期权"
+              label="显示全部期权"
             />
           </Box>
         </Paper>

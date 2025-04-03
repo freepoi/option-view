@@ -117,7 +117,7 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
     }
 
     // 绘制单个期权线（严格折线）
-    visibleOptions.forEach((optionId, idx) => {
+    visibleOptions.forEach((optionId) => {
       const option = options.find((o) => o.id === optionId);
       if (!option) return;
       const line = d3
@@ -132,7 +132,8 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
         .attr("d", line)
         .attr("fill", "none")
         .attr("stroke", option.color)
-        .attr("stroke-width", 1.5);
+        .attr("stroke-width", 1.5)
+        .attr("stroke-dasharray", "3 3");
     });
 
     // 添加垂直辅助线（在鼠标交互区域代码之后添加）
@@ -198,7 +199,12 @@ const ProfitChart: React.FC<ProfitChartProps> = ({
   return (
     <Box
       ref={containerRef}
-      sx={{ position: "relative", width: "100%", height: "500px" }}
+      sx={{
+        bgcolor: "white",
+        position: "relative",
+        width: "100%",
+        height: "500px",
+      }}
     >
       <svg ref={svgRef} width="100%" height="100%" />
       {hoverPrice && (

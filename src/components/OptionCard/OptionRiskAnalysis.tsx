@@ -1,9 +1,9 @@
 import React from "react";
 import { Box, Chip, Stack } from "@mui/material";
-import { calculateOptionRiskReward } from "../../utils/calculations";
+import { calculateOptionRiskReward, Option } from "../../utils/calculations";
 
 interface OptionRiskAnalysisProps {
-  option: any;
+  option: Option;
   index: number;
   formatValue: (value: number) => string;
 }

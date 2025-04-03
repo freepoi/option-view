@@ -3,10 +3,10 @@ import { createTheme } from "@mui/material/styles";
 export const theme = createTheme({
   palette: {
     primary: {
-      main: "#4361ee",
+      main: "#FF8370",
     },
     secondary: {
-      main: "#3f37c9",
+      main: "#FEC84D",
     },
     background: {
       default: "#f8f9fa",
@@ -17,16 +17,16 @@ export const theme = createTheme({
       secondary: "#495057",
     },
     success: {
-      main: "#4cc9f0",
+      main: "#00B1B0",
     },
     error: {
-      main: "#f72585",
+      main: "#E42256",
     },
     warning: {
       main: "#f8961e",
     },
     info: {
-      main: "#4895ef",
+      main: "#FF8370",
     },
   },
   typography: {
@@ -39,6 +39,7 @@ export const theme = createTheme({
           borderRadius: 8,
           textTransform: "none",
           fontWeight: 600,
+          color: "#FFFFFF",
         },
       },
     },
@@ -54,6 +55,13 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           fontWeight: 500,
+        },
+      },
+    },
+    MuiIconButton: {
+      styleOverrides: {
+        root: {
+          color: "#FEC84D",
         },
       },
     },
