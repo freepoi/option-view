@@ -137,26 +137,28 @@ export const calculatePortfolioRiskReward = (
   const maxGain = Math.max(...allValues);
   const maxLoss = Math.min(...allValues);
 
-  // 5. 特殊处理无限收益的情况
-  const hasUnlimitedGain = options.some(
-    (o) =>
-      o.position === "long" &&
-      o.type === "call" &&
-      !options.some(
-        (oo) =>
-          oo.type === "call" && oo.position === "short" && oo.strike > o.strike
-      )
-  );
+  const unlimitedOptionsMap: Record<"put" | "call", number> = {
+    put: 0,
+    call: 0,
+  };
 
-  const hasUnlimitedLoss = options.some(
-    (o) =>
-      o.position === "short" &&
-      o.type === "call" &&
-      !options.some(
-        (oo) =>
-          oo.type === "call" && oo.position === "long" && oo.strike < o.strike
-      )
-  );
+  // 5. 特殊处理无限收益的情况
+  options.forEach((o) => {
+    if (o.position === "long" && o.type === "call") {
+      unlimitedOptionsMap.call++;
+    } else if (o.position === "short" && o.type === "call") {
+      unlimitedOptionsMap.call--;
+    } else if (o.position === "long" && o.type === "put") {
+      unlimitedOptionsMap.put++;
+    } else if (o.position === "short" && o.type === "put") {
+      unlimitedOptionsMap.put--;
+    }
+  });
+
+  const hasUnlimitedGain: boolean =
+    unlimitedOptionsMap.call > 0 || unlimitedOptionsMap.put > 0;
+  const hasUnlimitedLoss: boolean =
+    unlimitedOptionsMap.call < 0 || unlimitedOptionsMap.put < 0;
 
   return {
     maxGain: hasUnlimitedGain ? Infinity : maxGain,
