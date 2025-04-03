@@ -2,7 +2,7 @@ name: Deploy React to GitHub Pages
 
 on:
   push:
-    branches: [ "main" ]  # 保持与你实际分支名一致
+    branches: [ "master" ]  # 保持与你实际分支名一致
   workflow_dispatch:
 
 permissions:
