@@ -1,8 +1,8 @@
-name: Deploy React to GitHub Pages
+name: Deploy React with pnpm
 
 on:
   push:
-    branches: [ "master" ]  # 保持与你实际分支名一致
+    branches: [ "master" ]
   workflow_dispatch:
 
 permissions:
@@ -17,25 +17,36 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      deployment-url: ${{ steps.deployment.outputs.page_url }}
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
 
+    # 必须先安装Node.js环境
     - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: "22.13.0"
-        cache: 'pnpm'
+        cache: 'pnpm'  # 启用pnpm缓存
 
-    - name: Setup pnpm
+    # 必须显式安装pnpm
+    - name: Install pnpm
+      id: pnpm
       uses: pnpm/action-setup@v2
       with:
-        version: 8.15.3
+        version: 8.15.3  # 必须与本地版本严格一致
+        run_install: false
 
+    # 需要将pnpm添加到PATH
+    - name: Get pnpm store path
+      shell: bash
+      run: |
+        echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_ENV
+
+    # 安装依赖
     - name: Install dependencies
-      run: pnpm install --frozen-lockfile --prod=false
+      run: pnpm install --frozen-lockfile
+      env:
+        PNPM_HOME: /home/runner/.pnpm-store  # 重要：设置pnpm路径
 
     - name: Build project
       run: pnpm build
@@ -44,16 +55,14 @@ jobs:
 
     - name: Upload artifact
       uses: actions/upload-pages-artifact@v3
-      id: deployment
       with:
-        path: './build'
+        path: ./build
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
     environment: 
-      name: github-pages  # 使用GitHub预定义的环境名
-      url: ${{ needs.build.outputs.deployment-url }}
+      name: github-pages
     steps:
     - name: Deploy
       uses: actions/deploy-pages@v4
